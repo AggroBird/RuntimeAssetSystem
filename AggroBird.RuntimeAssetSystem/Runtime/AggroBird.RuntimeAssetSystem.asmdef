@@ -1,0 +1,16 @@
+{
+    "name": "AggroBird.RuntimeAssetSystem",
+    "rootNamespace": "AggroBird.RuntimeAssetSystem",
+    "references": [
+        "GUID:e055ce7720bb9a448a03a662462f4be3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

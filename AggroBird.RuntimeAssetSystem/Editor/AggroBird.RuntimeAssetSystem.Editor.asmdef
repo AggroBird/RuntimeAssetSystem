@@ -1,0 +1,19 @@
+{
+    "name": "AggroBird.RuntimeAssetSystem.Editor",
+    "rootNamespace": "AggroBird.RuntimeAssetSystem.Editor",
+    "references": [
+        "GUID:e055ce7720bb9a448a03a662462f4be3",
+        "GUID:98c328efcfcf4604289f26e679af07cd"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

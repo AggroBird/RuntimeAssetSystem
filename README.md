@@ -27,4 +27,8 @@ public void Test()
 }
 ```
 
+Asset database gets generated automatically during build and stored in Resources folder. Assets can be excluded from the database by unchecking 'Include In Database' in the inspector.
+
+![alt text](https://github.com/AggroBird/RuntimeAssetSystem/blob/main/Documentation~/example.jpg?raw=true "Example Image")
+
 Assets are stored by LazyLoadReference<>, so they only get loaded by Unity when a match is found.

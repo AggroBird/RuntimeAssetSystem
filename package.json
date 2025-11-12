@@ -1,14 +1,14 @@
 {
-	"name": "com.aggrobird.runtimeassetdatabase",
-	"displayName": "Scene Objects",
+	"name": "com.aggrobird.runtimeassetsystem",
+	"displayName": "Runtime Asset System",
 	"version": "1.0.0",
 	"unity": "2022.3",
 	"keywords": ["Utility", "Asset", "Database"],
 	"category": "Utility",
-	"description": "",
+	"description": "Lightweight asset database for Unity to load assets by GUID",
 	"dependencies":
 	{
-		
+		"com.aggrobird.unityextend": "1.0.118"
 	},
 	"author":
 	{

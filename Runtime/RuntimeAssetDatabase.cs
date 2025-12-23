@@ -24,8 +24,8 @@ namespace AggroBird.RuntimeAssetSystem
                 public LazyLoadReference<RuntimeAsset> asset;
             }
 
-            public Asset[] assets;
             public string typeName;
+            public Asset[] assets;
         }
 
         [SerializeField]

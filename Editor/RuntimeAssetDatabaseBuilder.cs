@@ -20,7 +20,7 @@ namespace AggroBird.RuntimeAssetSystem.Editor
         {
             Debug.Log("Building Runtime Asset Database");
 
-            Dictionary<Type, Dictionary<GUID, RuntimeAsset>> data = new();
+            Dictionary<Type, SortedDictionary<GUID, RuntimeAsset>> perType = new();
             foreach (var assetGuidStr in AssetDatabase.FindAssets($"t:{typeof(RuntimeAsset).Name}"))
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(assetGuidStr);
@@ -33,12 +33,18 @@ namespace AggroBird.RuntimeAssetSystem.Editor
                     {
                         throw new BuildFailedException($"Asset '<a href=\"{assetPath}\">{asset.name}</a>' contains an invalid guid");
                     }
-                    if (!data.TryGetValue(assetType, out var set))
+                    if (!perType.TryGetValue(assetType, out var set))
                     {
-                        data[assetType] = set = new();
+                        perType[assetType] = set = new();
                     }
                     set.Add(assetGuid, asset);
                 }
+            }
+
+            SortedDictionary<string, SortedDictionary<GUID, RuntimeAsset>> stringTable = new();
+            foreach (var pair in perType)
+            {
+                stringTable[$"{pair.Key.FullName}, {pair.Key.Assembly.FullName}"] = pair.Value;
             }
 
             string resourceFolder = ResourceFolder;
@@ -47,12 +53,12 @@ namespace AggroBird.RuntimeAssetSystem.Editor
             if (File.Exists(resourcePath))
             {
                 RuntimeAssetDatabase database = AssetDatabase.LoadAssetAtPath<RuntimeAssetDatabase>(resourcePath);
-                WriteData(database, data);
+                WriteData(database, stringTable);
             }
             else
             {
                 RuntimeAssetDatabase database = ScriptableObject.CreateInstance<RuntimeAssetDatabase>();
-                WriteData(database, data);
+                WriteData(database, stringTable);
                 AssetDatabase.CreateAsset(database, resourcePath);
             }
             AssetDatabase.ImportAsset(resourcePath);
@@ -62,7 +68,7 @@ namespace AggroBird.RuntimeAssetSystem.Editor
 
         }
 
-        private void WriteData(RuntimeAssetDatabase database, Dictionary<Type, Dictionary<GUID, RuntimeAsset>> data)
+        private void WriteData(RuntimeAssetDatabase database, SortedDictionary<string, SortedDictionary<GUID, RuntimeAsset>> data)
         {
             SerializedObject scriptableObject = new(database);
             database.data = new RuntimeAssetDatabase.TypeCollection[data.Count];
@@ -80,7 +86,7 @@ namespace AggroBird.RuntimeAssetSystem.Editor
                         asset = new(obj.Value),
                     };
                 }
-                collection.typeName = $"{value.Key.FullName}, {value.Key.Assembly.FullName}";
+                collection.typeName = value.Key;
                 database.data[collectionIdx++] = collection;
             }
             EditorUtility.SetDirty(database);

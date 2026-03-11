@@ -1,4 +1,3 @@
-using AggroBird.UnityExtend;
 using UnityEngine;
 
 namespace AggroBird.RuntimeAssetSystem
@@ -12,9 +11,15 @@ namespace AggroBird.RuntimeAssetSystem
                 return false;
             }
 
-            if (asset.GetGUID() == GUID.zero)
+            if (!asset.IncludeInDatabase)
             {
-                Debug.LogError($"Attempted to reference an asset with an invalid GUID: {asset}", asset);
+                Debug.LogError($"Attempted to reference a runtime asset that was excluded from the database: {asset}", asset);
+                return false;
+            }
+
+            if (!asset.IncludeInDatabase || !asset.HasValidGUID())
+            {
+                Debug.LogError($"Attempted to reference a runtime asset with an invalid GUID: {asset}", asset);
                 return false;
             }
 

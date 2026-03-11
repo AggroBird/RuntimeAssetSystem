@@ -17,6 +17,8 @@ namespace AggroBird.RuntimeAssetSystem
             return guid;
         }
 
+        public bool HasValidGUID() => guid != GUID.zero;
+
         public bool IncludeInDatabase => includeInDatabase;
 
 

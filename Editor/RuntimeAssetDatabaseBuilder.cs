@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -12,9 +11,6 @@ namespace AggroBird.RuntimeAssetSystem.Editor
     internal class DatabaseBuilder : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
         int IOrderedCallback.callbackOrder => 0;
-
-        private string ResourceFolder => "Assets/Resources";
-        private string ResourcePath => $"{ResourceFolder}/{RuntimeAssetDatabase.ResourceName}.asset";
 
         void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport report)
         {
@@ -47,21 +43,27 @@ namespace AggroBird.RuntimeAssetSystem.Editor
                 stringTable[$"{pair.Key.FullName}, {pair.Key.Assembly.FullName}"] = pair.Value;
             }
 
-            string resourceFolder = ResourceFolder;
-            if (!Directory.Exists(resourceFolder)) Directory.CreateDirectory(resourceFolder);
-            string resourcePath = ResourcePath;
-            if (File.Exists(resourcePath))
+            RuntimeAssetDatabase database = null;
+            string databasePath = string.Empty;
+            foreach (var assetGuidStr in AssetDatabase.FindAssets($"t:{typeof(RuntimeAssetDatabase).Name}"))
             {
-                RuntimeAssetDatabase database = AssetDatabase.LoadAssetAtPath<RuntimeAssetDatabase>(resourcePath);
+                databasePath = AssetDatabase.GUIDToAssetPath(assetGuidStr);
+                database = AssetDatabase.LoadAssetAtPath<RuntimeAssetDatabase>(databasePath);
+                if (database)
+                {
+                    break;
+                }
+            }
+
+            if (database)
+            {
                 WriteData(database, stringTable);
             }
             else
             {
-                RuntimeAssetDatabase database = ScriptableObject.CreateInstance<RuntimeAssetDatabase>();
-                WriteData(database, stringTable);
-                AssetDatabase.CreateAsset(database, resourcePath);
+                throw new BuildFailedException("Failed to find runtime asset database");
             }
-            AssetDatabase.ImportAsset(resourcePath);
+            AssetDatabase.ImportAsset(databasePath);
         }
         void IPostprocessBuildWithReport.OnPostprocessBuild(BuildReport report)
         {
@@ -75,8 +77,10 @@ namespace AggroBird.RuntimeAssetSystem.Editor
             int collectionIdx = 0;
             foreach (var value in data)
             {
-                RuntimeAssetDatabase.TypeCollection collection = new();
-                collection.assets = new RuntimeAssetDatabase.TypeCollection.Asset[value.Value.Count];
+                RuntimeAssetDatabase.TypeCollection collection = new()
+                {
+                    assets = new RuntimeAssetDatabase.TypeCollection.Asset[value.Value.Count]
+                };
                 int objIdx = 0;
                 foreach (var obj in value.Value)
                 {

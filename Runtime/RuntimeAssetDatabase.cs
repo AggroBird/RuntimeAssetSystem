@@ -8,12 +8,9 @@ using UnityEngine;
 
 namespace AggroBird.RuntimeAssetSystem
 {
+    [CreateAssetMenu(menuName = "Runtime Asset Database")]
     public class RuntimeAssetDatabase : ScriptableObject
     {
-        public const string ResourceName = "RuntimeAssetDatabase";
-
-        private static RuntimeAssetDatabase instance = null;
-
         [Serializable]
         internal struct TypeCollection
         {
@@ -39,6 +36,7 @@ namespace AggroBird.RuntimeAssetSystem
 
         private readonly Dictionary<GUID, AssetReference> guidLookup = new();
         private readonly Dictionary<Type, AssetReference[]> typeLookup = new();
+        private bool initialized = false;
 
         private static class AssetBuffer<T> where T : RuntimeAsset
         {
@@ -82,46 +80,41 @@ namespace AggroBird.RuntimeAssetSystem
 
         private void BuildLookup()
         {
-            Dictionary<Type, List<AssetReference>> buildTypeLookup = new();
-            for (int i = 0; i < data.Length; i++)
+            if (!initialized)
             {
-                Type assetType = Type.GetType(data[i].typeName);
-                Type rootType = GetRootType(assetType);
+                initialized = true;
 
-                if (!buildTypeLookup.TryGetValue(rootType, out List<AssetReference> list))
+                Dictionary<Type, List<AssetReference>> buildTypeLookup = new();
+                for (int i = 0; i < data.Length; i++)
                 {
-                    buildTypeLookup[rootType] = list = new List<AssetReference>();
-                }
+                    Type assetType = Type.GetType(data[i].typeName);
+                    Type rootType = GetRootType(assetType);
 
-                foreach (var entry in data[i].assets)
-                {
-                    var assetReference = new AssetReference()
+                    if (!buildTypeLookup.TryGetValue(rootType, out List<AssetReference> list))
                     {
-                        asset = entry.asset,
-                        type = assetType,
-                    };
+                        buildTypeLookup[rootType] = list = new List<AssetReference>();
+                    }
 
-                    guidLookup.Add(entry.guid, assetReference);
-                    list.Add(assetReference);
+                    foreach (var entry in data[i].assets)
+                    {
+                        var assetReference = new AssetReference()
+                        {
+                            asset = entry.asset,
+                            type = assetType,
+                        };
+
+                        guidLookup.Add(entry.guid, assetReference);
+                        list.Add(assetReference);
+                    }
+                }
+                foreach (var pair in buildTypeLookup)
+                {
+                    typeLookup.Add(pair.Key, pair.Value.ToArray());
                 }
             }
-            foreach (var pair in buildTypeLookup)
-            {
-                typeLookup.Add(pair.Key, pair.Value.ToArray());
-            }
         }
 
-        private static void EnsureInstance()
-        {
-            if (!instance)
-            {
-                instance = Resources.Load<RuntimeAssetDatabase>(ResourceName);
-                if (!instance) throw new Exception("Failed to load runtime asset database");
-                instance.BuildLookup();
-            }
-        }
-
-        public static T LoadAsset<T>(GUID guid) where T : RuntimeAsset
+        public T LoadAsset<T>(GUID guid) where T : RuntimeAsset
         {
 #if UNITY_EDITOR
             if (Application.isEditor)
@@ -135,9 +128,9 @@ namespace AggroBird.RuntimeAssetSystem
             else
 #endif
             {
-                EnsureInstance();
+                BuildLookup();
 
-                if (instance.guidLookup.TryGetValue(guid, out var item) && typeof(T).IsAssignableFrom(item.type))
+                if (guidLookup.TryGetValue(guid, out var item) && typeof(T).IsAssignableFrom(item.type))
                 {
                     return item.asset.asset as T;
                 }
@@ -145,7 +138,7 @@ namespace AggroBird.RuntimeAssetSystem
 
             return null;
         }
-        public static T[] LoadAllAssetsOfType<T>() where T : RuntimeAsset
+        public T[] LoadAllAssetsOfType<T>() where T : RuntimeAsset
         {
 #if UNITY_EDITOR
             if (Application.isEditor)
@@ -171,14 +164,14 @@ namespace AggroBird.RuntimeAssetSystem
             else
 #endif
             {
-                EnsureInstance();
+                BuildLookup();
 
                 Type targetType = typeof(T);
                 if (targetType.Equals(typeof(RuntimeAsset)))
                 {
                     // Load all assets
                     List<T> result = AssetBuffer<T>.GetInstance();
-                    foreach (var assetReference in instance.guidLookup.Values)
+                    foreach (var assetReference in guidLookup.Values)
                     {
                         var asset = assetReference.asset.asset as T;
                         if (asset)
@@ -191,7 +184,7 @@ namespace AggroBird.RuntimeAssetSystem
                 else
                 {
                     // Filter on root type
-                    if (instance.typeLookup.TryGetValue(GetRootType(targetType), out AssetReference[] assetReferences))
+                    if (typeLookup.TryGetValue(GetRootType(targetType), out AssetReference[] assetReferences))
                     {
                         List<T> result = AssetBuffer<T>.GetInstance();
                         for (int i = 0; i < assetReferences.Length; i++)
@@ -213,7 +206,7 @@ namespace AggroBird.RuntimeAssetSystem
 
             return Array.Empty<T>();
         }
-        public static bool TryLoadAsset<T>(GUID guid, out T asset) where T : RuntimeAsset
+        public bool TryLoadAsset<T>(GUID guid, out T asset) where T : RuntimeAsset
         {
             asset = LoadAsset<T>(guid);
             return asset;

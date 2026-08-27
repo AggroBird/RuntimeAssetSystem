@@ -1,7 +1,7 @@
 {
 	"name": "com.aggrobird.runtimeassetsystem",
 	"displayName": "Runtime Asset System",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"unity": "2022.3",
 	"keywords": ["Utility", "Asset", "Database"],
 	"category": "Utility",

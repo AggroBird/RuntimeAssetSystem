@@ -8,11 +8,12 @@ using GUID = AggroBird.UnityExtend.GUID;
 
 namespace AggroBird.RuntimeAssetSystem.Editor
 {
-    internal class DatabaseBuilder : IPreprocessBuildWithReport, IPostprocessBuildWithReport
+    internal class DatabaseBuilder : IPreprocessBuildWithReport
     {
         int IOrderedCallback.callbackOrder => 0;
 
-        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport report)
+        [MenuItem("Window/Asset Management/Build Runtime Asset Database", priority = 999)]
+        private static void BuildRuntimeAssetDatabase()
         {
             Debug.Log("Building Runtime Asset Database");
 
@@ -61,16 +62,24 @@ namespace AggroBird.RuntimeAssetSystem.Editor
             }
             else
             {
-                throw new BuildFailedException("Failed to find runtime asset database");
+                throw new UnityException("Failed to find runtime asset database");
             }
             AssetDatabase.ImportAsset(databasePath);
         }
-        void IPostprocessBuildWithReport.OnPostprocessBuild(BuildReport report)
-        {
 
+        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport report)
+        {
+            try
+            {
+                BuildRuntimeAssetDatabase();
+            }
+            catch (Exception ex)
+            {
+                throw new BuildFailedException($"Failed to build runtime asset database: {ex}");
+            }
         }
 
-        private void WriteData(RuntimeAssetDatabase database, SortedDictionary<string, SortedDictionary<GUID, RuntimeAsset>> data)
+        private static void WriteData(RuntimeAssetDatabase database, SortedDictionary<string, SortedDictionary<GUID, RuntimeAsset>> data)
         {
             SerializedObject scriptableObject = new(database);
             database.data = new RuntimeAssetDatabase.TypeCollection[data.Count];

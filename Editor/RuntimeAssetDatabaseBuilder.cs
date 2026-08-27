@@ -103,7 +103,14 @@ namespace AggroBird.RuntimeAssetSystem.Editor
                 database.data[collectionIdx++] = collection;
             }
             EditorUtility.SetDirty(database);
-            scriptableObject.ApplyModifiedPropertiesWithoutUndo();
+            if (scriptableObject.ApplyModifiedPropertiesWithoutUndo())
+            {
+                Debug.Log("Runtime asset database updated");
+            }
+            else
+            {
+                Debug.Log("Runtime asset database is up to date");
+            }
         }
     }
 }

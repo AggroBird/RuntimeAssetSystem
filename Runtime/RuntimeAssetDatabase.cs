@@ -18,7 +18,7 @@ namespace AggroBird.RuntimeAssetSystem
             internal struct Asset
             {
                 public GUID guid;
-                public LazyLoadReference<RuntimeAsset> asset;
+                public RuntimeAsset asset;
             }
 
             public string typeName;
@@ -30,7 +30,7 @@ namespace AggroBird.RuntimeAssetSystem
 
         private struct AssetReference
         {
-            public LazyLoadReference<RuntimeAsset> asset;
+            public RuntimeAsset asset;
             public Type type;
         }
 
@@ -132,7 +132,7 @@ namespace AggroBird.RuntimeAssetSystem
 
                 if (guidLookup.TryGetValue(guid, out var item) && typeof(T).IsAssignableFrom(item.type))
                 {
-                    return item.asset.asset as T;
+                    return item.asset as T;
                 }
             }
 
@@ -173,7 +173,7 @@ namespace AggroBird.RuntimeAssetSystem
                     List<T> result = AssetBuffer<T>.GetInstance();
                     foreach (var assetReference in guidLookup.Values)
                     {
-                        var asset = assetReference.asset.asset as T;
+                        var asset = assetReference.asset as T;
                         if (asset)
                         {
                             result.Add(asset);
@@ -192,7 +192,7 @@ namespace AggroBird.RuntimeAssetSystem
                             var assetReference = assetReferences[i];
                             if (typeof(T).IsAssignableFrom(assetReference.type))
                             {
-                                var asset = assetReference.asset.asset as T;
+                                var asset = assetReference.asset as T;
                                 if (asset)
                                 {
                                     result.Add(asset);

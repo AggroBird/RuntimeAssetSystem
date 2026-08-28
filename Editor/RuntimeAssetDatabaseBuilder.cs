@@ -96,7 +96,7 @@ namespace AggroBird.RuntimeAssetSystem.Editor
                     collection.assets[objIdx++] = new()
                     {
                         guid = obj.Key,
-                        asset = new(obj.Value),
+                        asset = obj.Value,
                     };
                 }
                 collection.typeName = value.Key;
